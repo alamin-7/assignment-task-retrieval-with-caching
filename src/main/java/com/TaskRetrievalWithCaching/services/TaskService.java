@@ -6,6 +6,7 @@ import com.TaskRetrievalWithCaching.models.Task;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -22,7 +23,11 @@ public class TaskService {
         this.taskFolderPath = taskFolderPath;
     }
 
+
+    @Cacheable(value = "taskCache", key = "#id")
     public Task getTaskById(String id) {
+
+        System.out.println("New data");
 
         File file = new File(taskFolderPath + File.separator + id + ".json");
 
