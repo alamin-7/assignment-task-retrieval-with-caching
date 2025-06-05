@@ -11,16 +11,16 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.MalformedInputException;
 
 @Service
 public class TaskService {
 
-     private final ObjectMapper objectMapper = new ObjectMapper();
+     private final ObjectMapper objectMapper;
      private final String taskFolderPath;
 
-    public TaskService(@Value("${task.folder.path}") String taskFolderPath) {
+    public TaskService(@Value("${task.folder.path}") String taskFolderPath, ObjectMapper objectMapper) {
         this.taskFolderPath = taskFolderPath;
+        this.objectMapper = objectMapper;
     }
 
 
