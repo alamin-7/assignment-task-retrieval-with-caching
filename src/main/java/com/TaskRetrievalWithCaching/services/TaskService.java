@@ -1,5 +1,6 @@
 package com.TaskRetrievalWithCaching.services;
 
+import com.TaskRetrievalWithCaching.caching.LRUCache;
 import com.TaskRetrievalWithCaching.exceptions.MalformedJsonException;
 import com.TaskRetrievalWithCaching.exceptions.TaskNotFoundException;
 import com.TaskRetrievalWithCaching.models.Task;
@@ -17,15 +18,25 @@ public class TaskService {
 
      private final ObjectMapper objectMapper;
      private final String taskFolderPath;
+     private final LRUCache<String, String> cache;
 
-    public TaskService(@Value("${task.folder.path}") String taskFolderPath, ObjectMapper objectMapper) {
+    public TaskService(@Value("${task.folder.path}") String taskFolderPath, ObjectMapper objectMapper, LRUCache<String, String> cache) {
         this.taskFolderPath = taskFolderPath;
         this.objectMapper = objectMapper;
+        this.cache = cache;
     }
 
-
-    @Cacheable(value = "taskCache", key = "#id")
     public Task getTaskById(String id) {
+
+        if(cache.containsKey(id)) {
+            System.out.println("Cache hit for ID: " + id);
+
+            try{
+                return objectMapper.readValue(cache.get(id), Task.class);
+            } catch (JsonProcessingException ex){
+                throw new MalformedJsonException(("Malformed JSON"));
+            }
+        }
 
         System.out.println("New data");
 
@@ -36,7 +47,12 @@ public class TaskService {
         }
 
         try {
-            return objectMapper.readValue(file, Task.class);
+
+            Task task =  objectMapper.readValue(file, Task.class);
+            String taskJson = objectMapper.writeValueAsString(task);
+            cache.put(id, taskJson);
+            return task;
+
         } catch (JsonProcessingException ex){
             throw new MalformedJsonException("Malformed JSON in file: " + id + ".json");
         } catch (IOException ex){
